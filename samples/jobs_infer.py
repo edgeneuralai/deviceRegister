@@ -266,6 +266,7 @@ if __name__ == '__main__':
     args.cert = configur.get("SETTINGS","CLAIM_CERT")
     args.key = configur.get("SETTINGS","SECURE_KEY")
     thing_name = configur.get("SETTINGS","THING_NAME")
+    args.thing_name = thing_name
     io.init_logging(getattr(io.LogLevel, args.verbosity), 'stderr')
     #with open("/etc/machine-id") as file:
     #    machine_uuid = file.readline().rstrip() 
