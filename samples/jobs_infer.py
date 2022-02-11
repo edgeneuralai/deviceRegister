@@ -46,7 +46,8 @@ parser.add_argument('--key', help="File path to your private key file, in PEM fo
 parser.add_argument('--root-ca',help="File path to root certificate authority, in PEM format. " +
                                       "Necessary if MQTT server uses a certificate that's not already in " +
                                       "your trust store")
-parser.add_argument('--client-id', default="basicShadowUpdater", help="Client ID for MQTT connection.")
+parser.add_argument('--clientid', default="basicShadowUpdater", help="Client ID for MQTT connection.")
+parser.add_argument('--device_name', help="Device name")
 parser.add_argument('--thing-name', help="The name assigned to your IoT Thing")
 parser.add_argument('--job-time', default=5, type=float, help="Emulate working on job by sleeping this many seconds.")
 parser.add_argument('--use-websocket', default=False, action='store_true',
@@ -255,8 +256,8 @@ if __name__ == '__main__':
     # Process input args
     
     args = parser.parse_args()
-    with open("/etc/machine-id") as file:
-        args.thing_name = "edgeneural_"+file.readline().rstrip()
+    #with open("/etc/machine-id") as file:
+    #    args.thing_name = "edgeneural_"+file.readline().rstrip()+"_"+args.device_name+"_"+args.clientid
     print("THING: ",args.thing_name)
     configur = ConfigParser()
     configur.read(args.config)
@@ -264,11 +265,13 @@ if __name__ == '__main__':
     args.root_ca = configur.get("SETTINGS","ROOT_CERT")
     args.cert = configur.get("SETTINGS","CLAIM_CERT")
     args.key = configur.get("SETTINGS","SECURE_KEY")
-    thing_name = args.thing_name
+    thing_name = configur.get("SETTINGS","THING_NAME")
     io.init_logging(getattr(io.LogLevel, args.verbosity), 'stderr')
-    with open("/etc/machine-id") as file:
-        machine_uuid = file.readline().rstrip() 
-    client_id = "edgeneural_{}".format(machine_uuid)
+    #with open("/etc/machine-id") as file:
+    #    machine_uuid = file.readline().rstrip() 
+    #client_id = "edgeneural_{}".format(machine_uuid)
+    #client_id= "edgeneural_"+machine_uuid + "_" + args.device_name + "_" + args.clientid 
+    client_id = configur.get("SETTINGS","THING_NAME")
     # Spin up resources
     event_loop_group = io.EventLoopGroup(1)
     host_resolver = io.DefaultHostResolver(event_loop_group)
@@ -300,12 +303,12 @@ if __name__ == '__main__':
             client_bootstrap=client_bootstrap,
             ca_filepath=args.root_ca,
             client_id=client_id,
-            clean_session=False,
+            clean_session=True,
             keep_alive_secs=30,
             http_proxy_options=proxy_options)
 
-    print("Connecting to {} with client ID '{}'...".format(
-        args.endpoint, client_id))
+    print("Connecting to {} {} {} {} with client ID '{}'...".format(
+        args.endpoint, args.cert, args.key, args.root_ca, client_id))
 
     connected_future = mqtt_connection.connect()
 
