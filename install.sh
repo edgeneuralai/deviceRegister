@@ -1,4 +1,8 @@
-pip3 install --target=/usr/local/lib/python3.6/dist-packages awsiotsdk-1.0.0.dev0-py3-$1-any.whl
+if [ $1=='x86' ]
+then
+	pip3 install --target=/usr/local/lib/python3.6/dist-packages awsiotsdk-1.0.0.dev0-py3-$1-any.whl
+else
+	pip3 install --target=/usr/local/lib/python3.6/dist-packages awsiotsdk-1.0.0.dev0-py3-jetson-any.whl
 pip3 install --target=/usr/local/lib/python3.6/dist-packages psutil boto3
 docker pull edgeneural/enapregister:$1
 docker run -it -v /etc/:/tmp/ edgeneural/enapregister:$1 $2 $3 $4
