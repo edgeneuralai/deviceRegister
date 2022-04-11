@@ -4,7 +4,7 @@ then
 else
 	pip3 install --target=/usr/local/lib/python3.6/dist-packages awsiotsdk-1.0.0.dev0-py3-jetson-any.whl
 fi
-pip3 install --target=/usr/local/lib/python3.6/dist-packages psutil boto3 crontab python-crontab
+pip3 install --target=/usr/local/lib/python3.6/dist-packages psutil boto3 python-crontab
 sudo docker pull edgeneural/enapregister:$1
 sudo docker run -it -v /etc/:/tmp/ edgeneural/enapregister:$1 $2 $3 $4
 #git clone https://github.com/rohitkatakolen/awsiotsdk.git /home/awsiotsdk
