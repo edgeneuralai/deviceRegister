@@ -28,13 +28,17 @@ class create_process:
         self.WorkDir = workdir
         print("Process created")
     def create(self,cfg_file, dockerurl):
-        global p 
-        p = subprocess.Popen(["sudo" ,"docker" ,"run" ,"--name","infer","--runtime" ,"nvidia" ,"--rm" ,"--network" ,"host" ,"--gpus" ,"all" ,"-v" ,"{}:/input_models".format(self.WorkDir) , dockerurl, '/input_models/infer_config.yaml'] , stdout=subprocess.PIPE)
+        global p
+        os.system("sh ./xauth_script.sh")
+        display = os.environ['DISPLAY']
+        p = subprocess.Popen(["sudo" ,"docker" ,"run" ,"--name","infer","--runtime" ,"nvidia" ,"--rm" ,"--network" ,"host" , \
+                "-e", "DISPLAY={}".format(display), "-v", "/tmp/.X11-unix/:/tmp/.X11-unix", "-v", "/tmp/.docker.xauth:/tmp/.docker.xauth", "-e", "XAUTHORITY=/tmp/.docker.xauth", \
+                "--gpus" ,"all" ,"-v" ,"{}:/input_models".format(self.WorkDir) , dockerurl, '/input_models/infer_config.yaml'] , stdout=subprocess.PIPE)
         print(p)
     
     def create_watch(self,session_id):
         global p1 
-        p1 = subprocess.Popen(["sudo","python3","/tmp/watchandpush.py","--sessionid",session_id] , stdout=subprocess.PIPE)
+        p1 = subprocess.Popen(["python3","/tmp/watchandpush.py","--sessionid",session_id] , stdout=subprocess.PIPE)
         print(p1)
 
     def killjob(self):
@@ -77,9 +81,24 @@ class InferenceDocker:
     def create_yaml_file(self, job_document, workdir):
         data = dict()
         data['modelname'] = job_document["modelname"]
-        data['camera'] = job_document["config"]
-        data['img-size'] = [256,256]
-        data['show'] = False
+        data['camera'] = dict()
+        for index, cam in enumerate(job_document["config"]["camera"]):
+            # Local video inference
+            if (job_document["config"]["infer_online"]=='False'):
+                videofile = cam.split('/')[-1]
+                os.system("cp {} {}".format(cam,workdir))
+                cam = os.path.join('/input_models/', videofile)
+            data['camera'][index] = cam
+        #data['camera'] = job_document["config"]["camera"]
+        data['img-size'] = job_document["config"]["img-size"]
+        if(job_document["config"]["show"]=='True'):
+            data['show'] = True
+        else:
+            data['show'] = False
+        if(job_document["config"]["infer_online"]=='True'):
+            data['infer_online'] = True
+        else:
+            data['infer_online'] = False
         with open(r'{}'.format(os.path.join(workdir, 'infer_config.yaml')), 'w') as file:
             documents = yaml.dump(data, file)
 
@@ -95,7 +114,8 @@ class InferenceDocker:
 
         #Clearn the directory first and then download artifacts 
         os.system("rm -rf {}/*".format(self.WorkDir))
-        self.download_data_from_url(modelurl, os.path.join(self.WorkDir ,'artifacts.zip'))
+        if(job_document['flag'] == 'custom'):
+            self.download_data_from_url(modelurl, os.path.join(self.WorkDir ,'artifacts.zip'))
         aws_access_key_id=job_document['aws_access_key_id']
         aws_secret_access_key=job_document['aws_secret_access_key']
         aws_session_token=job_document['aws_session_token']
