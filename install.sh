@@ -8,5 +8,11 @@ pip3 install --target=/usr/local/lib/python3.6/dist-packages psutil boto3 python
 sudo docker pull edgeneural/enapregister:$1
 sudo docker run -it -v /etc/:/tmp/ edgeneural/enapregister:$1 $2 $3 $4
 #git clone https://github.com/rohitkatakolen/awsiotsdk.git /home/awsiotsdk
-sudo python3 /tmp/enapjobs/cron_start.py --workdir /tmp/enapjobs/workspace/ --hardware $1
+#sudo python3 /tmp/enapjobs/cron_start.py --workdir /tmp/enapjobs/workspace/ --hardware $1
+if [ $1=='x86' ]
+then
+        sudo python3 samples/jobs_infer.py --config /etc/permanent_cert/perm_config.ini --workdir /tmp/enapjobs/workspace/ --hardware $1
+else
+	sudo python3 samples/jobs_infer.py --config /etc/permanent_cert/perm_config.ini --workdir /tmp/enapjobs/workspace/ --hardware jetson
+fi
 
