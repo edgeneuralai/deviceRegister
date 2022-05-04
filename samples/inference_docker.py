@@ -6,6 +6,10 @@ import psutil
 import subprocess
 import signal
 import yaml
+import docker
+import boto3
+import base64
+
 
 def kill(proc_pid):
     process = psutil.Process(proc_pid)
@@ -122,15 +126,32 @@ class InferenceDocker:
 
         self.create_yaml_file(job_document, self.WorkDir)
 
-        os.system("export AWS_ACCESS_KEY_ID="+aws_access_key_id)
-        os.system("export AWS_SECRET_ACCESS_KEY="+aws_secret_access_key)
-        os.system("export AWS_SESSION_TOKEN="+aws_session_token)
+        os.environ["AWS_ACCESS_KEY_ID"] = aws_access_key_id
+        os.environ["AWS_SECRET_ACCESS_KEY"] = aws_secret_access_key
+        os.environ["AWS_SESSION_TOKEN"] = aws_session_token
+        print("##########################")
+        os.system("echo $AWS_ACCESS_KEY_ID")
+        try:
+            docker_client = docker.from_env()
+            ecr_client = boto3.client('ecr', region_name='ap-south-1')
 
-        os.system("sudo aws ecr get-login-password --region ap-south-1 |  sudo docker login --username AWS --password-stdin 713356161935.dkr.ecr.ap-south-1.amazonaws.com")        
+            token = ecr_client.get_authorization_token()
+            username, password = base64.b64decode(token['authorizationData'][0]['authorizationToken']).decode().split(':')
+            registry = token['authorizationData'][0]['proxyEndpoint']
+
+            docker_client.login(username, password, registry=registry)
+            print("Pulling docker image......")
+            docker_client.images.pull(job_document['dockerurl'])
+            print("Docker pull completed successfully....")
+        except Exception as E:
+            print(E)
+            self.killjob()
+
+        #os.system("sudo aws ecr get-login-password --region ap-south-1 |  sudo docker login --username AWS --password-stdin 713356161935.dkr.ecr.ap-south-1.amazonaws.com")        
         self.pjob.create(self.vid, self.dockerurl)
         self.pjob.create_watch(self.session_id)
         print("Inferece Engine Started\n")
-    
+
     def killjob(self):
         self.pjob.killjob()
 

@@ -1,10 +1,11 @@
 if [ $1=='x86' ]
 then
-	pip3 install --target=/usr/local/lib/python3.6/dist-packages awsiotsdk-1.0.0.dev0-py3-$1-any.whl
+	pip3 install awsiotsdk-1.0.0.dev0-py3-none-any.whl
 else
-	pip3 install --target=/usr/local/lib/python3.6/dist-packages awsiotsdk-1.0.0.dev0-py3-jetson-any.whl
+	pip3 install awsiotsdk-1.0.0.dev0-py3-jetson-any.whl
 fi
-pip3 install --target=/usr/local/lib/python3.6/dist-packages psutil boto3 python-crontab
+pip3 install psutil boto3 docker
+
 sudo docker pull edgeneural/enapregister:$1
 sudo docker run -it -v /etc/:/tmp/ edgeneural/enapregister:$1 $2 $3 $4
 #git clone https://github.com/rohitkatakolen/awsiotsdk.git /home/awsiotsdk
