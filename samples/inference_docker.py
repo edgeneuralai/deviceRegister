@@ -141,7 +141,8 @@ class InferenceDocker:
 
             docker_client.login(username, password, registry=registry)
             print("Pulling docker image......")
-            docker_client.images.pull(job_document['dockerurl'])
+            for i in tqdm(docker_client.images.pull(job_document['dockerurl'], stream=True)):
+                pass
             print("Docker pull completed successfully....")
         except Exception as E:
             print(E)
