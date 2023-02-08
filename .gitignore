@@ -1,2 +1,5 @@
 workspace
 __pycache__
+
+#test video file
+*.mp4
