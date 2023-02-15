@@ -6,8 +6,8 @@ else
 fi
 python3.6 -m pip  install psutil boto3 docker
 
-sudo docker pull swanandk/enapregistration:$1
-sudo docker run -it -v /etc/:/tmp/ swanandk/enapregistration:$1 $2 $3 $4 $5
+sudo docker pull swanandk/enapregtemplate:$1
+sudo docker run -it -v /etc/:/tmp/ swanandk/enapregtemplate:$1 $2 $3 $4 $5
 #git clone https://github.com/rohitkatakolen/awsiotsdk.git /home/awsiotsdk
 #sudo python3 /tmp/enapjobs/cron_start.py --workdir /tmp/enapjobs/workspace/ --hardware $1
 if [ $1=='x86' ]
