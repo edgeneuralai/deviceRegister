@@ -88,11 +88,12 @@ class InferenceDocker:
         data['camera'] = dict()
         for index, cam in enumerate(job_document["config"]["camera"]):
             # Local video inference
+            #hardcoded for mp4 currently
             if (job_document["config"]["infer_online"]=='False'):
                 videofile = cam.split('/')[-1]
-                os.system("cp {} {}".format(cam,workdir))
+                os.system("cp {} {}".format(cam+".mp4",workdir))
                 cam = os.path.join('/input_models/', videofile)
-            data['camera'][index] = cam
+            data['camera'][index] = cam+".mp4"
         #data['camera'] = job_document["config"]["camera"]
         data['img-size'] = job_document["config"]["img-size"]
         if(job_document["config"]["show"]=='True'):
@@ -118,6 +119,10 @@ class InferenceDocker:
 
         #Clearn the directory first and then download artifacts 
         os.system("rm -rf {}/*".format(self.WorkDir))
+
+        # Remove "infer" name container
+        os.system("docker rm -f /infer")
+
         if(job_document['flag'] == 'custom'):
             self.download_data_from_url(modelurl, os.path.join(self.WorkDir ,'artifacts.zip'))
         aws_access_key_id=job_document['aws_access_key_id']
@@ -147,10 +152,10 @@ class InferenceDocker:
             print(E)
             self.killjob()
 
-        #os.system("sudo aws ecr get-login-password --region ap-south-1 |  sudo docker login --username AWS --password-stdin 713356161935.dkr.ecr.ap-south-1.amazonaws.com")        
+        os.system("sudo aws ecr get-login-password --region ap-south-1 |  sudo docker login --username AWS --password-stdin 713356161935.dkr.ecr.ap-south-1.amazonaws.com")        
         self.pjob.create(self.vid, self.dockerurl)
-        self.pjob.create_watch(self.session_id)
-        print("Inferece Engine Started\n")
+        # self.pjob.create_watch(self.session_id)
+        print("Inference Engine Started\n")
 
     def killjob(self):
         self.pjob.killjob()
